@@ -48,7 +48,7 @@ const R709_TO_XYZ_D65 = [
 function calculate_Lstar_value_for_monochrome(linear_value::Float64)
     
     # Multiply R709_TO_XYZ_D65 matrix by vector with the same linear_value for R, G and B (monochrome)
-    XYZ_D65 = R709_TO_XYZ_D65 * [linear_value, linear_value, linear_value]
+    XYZ_D65 = R709_TO_XYZ_D65 * fill(linear_value, 3)
     
     # Calculate L* value for D65
     Yn = 1.0  # Reference white point
@@ -56,12 +56,10 @@ function calculate_Lstar_value_for_monochrome(linear_value::Float64)
     Y_div_Yn = Y / Yn
 
     if Y_div_Yn > 0.008856
-        L_star = 116 * Y_div_Yn ^ (1/3) - 16
+        return 116 * Y_div_Yn ^ (1/3) - 16
     else
-        L_star = 903.3 * Y_div_Yn
+        return 903.3 * Y_div_Yn
     end
-
-    return L_star
 end
 
 
@@ -70,7 +68,9 @@ const ICCv2_precise_CALC = ICCv2_precise()
 const ICCv4_CALC = ICCv4()
 const ALL_CALCS = [ICCv2_CALC, ICCv2_precise_CALC, ICCv4_CALC]
 
-function stat(int_level__ICCv2::Int, int_level__ICCv4::Int, bit_depth::Int)
+@enum BitDepth::UInt8 _8=8 _9=9 _10=10 _11=11 _12=12 _13=13 _14=14 _15=15 _16=16
+
+function stat(int_level__ICCv2::Union{UInt8, UInt16}, int_level__ICCv4::Union{UInt8, UInt16}, bit_depth::BitDepth)
     
     int_levels = Dict(
         ICCv2_CALC => int_level__ICCv2,
@@ -84,7 +84,7 @@ function stat(int_level__ICCv2::Int, int_level__ICCv4::Int, bit_depth::Int)
     
     for calc in ALL_CALCS
 
-        normalized_levels[calc] = int_levels[calc] / (2^bit_depth - 1)
+        normalized_levels[calc] = int_levels[calc] / (2^UInt8(bit_depth) - 1)
         
         linear_values[calc] = calculate_linear_value(normalized_levels[calc], calc)
 
@@ -93,30 +93,30 @@ function stat(int_level__ICCv2::Int, int_level__ICCv4::Int, bit_depth::Int)
 
     for calc in ALL_CALCS
 
-        @printf "level %5d /%2d normalized level in range [0..1]: %0.5f (%s)\n" int_levels[calc] bit_depth normalized_levels[calc] nameof(typeof(calc))
+        @printf "level %5d /%2d normalized level in range [0..1]: %0.5f (%s)\n" int_levels[calc] UInt8(bit_depth) normalized_levels[calc] nameof(typeof(calc))
     end
 
     for calc in ALL_CALCS
 
-        @printf "level %5d /%2d linear value in range [0..1]: %0.5f (%s)\n" int_levels[calc] bit_depth linear_values[calc] nameof(typeof(calc))
+        @printf "level %5d /%2d linear value in range [0..1]: %0.5f (%s)\n" int_levels[calc] UInt8(bit_depth) linear_values[calc] nameof(typeof(calc))
     end
 
     for calc in ALL_CALCS
 
-        @printf "level %5d /%2d L* value in range [0..100]: %0.2f (%s)\n" int_levels[calc] bit_depth Lstar_values[calc] nameof(typeof(calc))
+        @printf "level %5d /%2d L* value in range [0..100]: %0.2f (%s)\n" int_levels[calc] UInt8(bit_depth) Lstar_values[calc] nameof(typeof(calc))
     end
     
     println()
 end
 
 
-stat(0, 0, 8)  # BLACK - 8-bit
-stat(0, 0, 16)  # BLACK - 16-bit
-stat(1, 1, 8)  # very dark color (ICC v2) - 8-bit
-stat(1, 1, 16)  # very dark color (ICC v2) - 16-bit
-stat(2^8 - 2, 2^8 - 2, 8)  # brightness color (ICC v2) - 8-bit
-stat(2^16 - 2, 2^16 - 2, 16)  # brightness color (ICC v2) - 16-bit
-stat(124, 123, 8)  # 20% Image surround reflectance (ICC v2) - 8-bit
-stat(118, 117, 8)  # 18% gray card (ICC v2) - 8-bit
-stat(15117, 15037, 15)  # 18% gray card (ICC v2) - 15-bit
-stat(30235, 30074, 16)  # 18% gray card (ICC v2) - 16-bit
+stat(UInt8(0), UInt8(0), _8)  # BLACK - 8-bit
+stat(UInt16(0), UInt16(0), _16)  # BLACK - 16-bit
+stat(UInt8(1), UInt8(1), _8)  # very dark color (ICC v2) - 8-bit
+stat(UInt16(1), UInt16(1), _16)  # very dark color (ICC v2) - 16-bit
+stat(UInt8(2^8 - 2), UInt8(2^8 - 2), _8)  # brightness color (ICC v2) - 8-bit
+stat(UInt16(2^16 - 2), UInt16(2^16 - 2), _16)  # brightness color (ICC v2) - 16-bit
+stat(UInt8(124), UInt8(123), _8)  # 20% Image surround reflectance (ICC v2) - 8-bit
+stat(UInt8(118), UInt8(117), _8)  # 18% gray card (ICC v2) - 8-bit
+stat(UInt16(15117), UInt16(15037), _15)  # 18% gray card (ICC v2) - 15-bit
+stat(UInt16(30235), UInt16(30074), _16)  # 18% gray card (ICC v2) - 16-bit
