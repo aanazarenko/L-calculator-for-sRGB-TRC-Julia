@@ -89,6 +89,7 @@ function stat(int_level__ICCv2::Int, int_level__ICCv4::Int, bit_depth::Int)
     println()
 end
 
+
 stat(1, 1, 8)  # very dark color (ICC v2) - 8-bit
 stat(1, 1, 16)  # very dark color (ICC v2) - 16-bit
 stat(2^8 - 2, 2^8 - 2, 8)  # brightness color (ICC v2) - 8-bit
