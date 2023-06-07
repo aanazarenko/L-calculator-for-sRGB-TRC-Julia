@@ -13,7 +13,7 @@ struct ICCv2_precise <: ClinearCalculator end
 struct ICCv4 <: ClinearCalculator end
 
 
-function calc_Clinear(CsRGB::Float64, calculator::ICCv2)
+function calc_Clinear(CsRGB::Float64, ::ICCv2)
     if CsRGB <= 0.04045
         return CsRGB / 12.92
     else
@@ -21,7 +21,7 @@ function calc_Clinear(CsRGB::Float64, calculator::ICCv2)
     end
 end
 
-function calc_Clinear(CsRGB::Float64, calculator::ICCv2_precise)
+function calc_Clinear(CsRGB::Float64, ::ICCv2_precise)
     if CsRGB <= 0.0392857
         return CsRGB / 12.9232102
     else
@@ -29,7 +29,7 @@ function calc_Clinear(CsRGB::Float64, calculator::ICCv2_precise)
     end
 end
 
-function calc_Clinear(CsRGB::Float64, calculator::ICCv4)
+function calc_Clinear(CsRGB::Float64, ::ICCv4)
     if CsRGB <= 0.04045
         return 0.0772059 * CsRGB + 0.0025
     else
