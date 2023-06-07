@@ -53,12 +53,12 @@ function calculate_Lstar_value_for_monochrome(linear_value::Float64)
     # Calculate L* value for D65
     Yn = 1.0  # Reference white point
     Y = XYZ_D65[2]  # Y coordinate
-    Y_div_Yn = Y / Yn
+    Y÷Yn = Y / Yn
 
-    if Y_div_Yn > 0.008856
-        return 116 * Y_div_Yn ^ (1/3) - 16
+    if Y÷Yn > 0.008856
+        return 116 * Y÷Yn ^ (1/3) - 16
     else
-        return 903.3 * Y_div_Yn
+        return 903.3 * Y÷Yn
     end
 end
 
