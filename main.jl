@@ -68,9 +68,9 @@ end
 const ICCv2_CALC = ICCv2()
 const ICCv2_precise_CALC = ICCv2_precise()
 const ICCv4_CALC = ICCv4()
+const ALL_CALCS = [ICCv2_CALC, ICCv2_precise_CALC, ICCv4_CALC]
 
 function stat(int_level__ICCv2::Int, int_level__ICCv4::Int, bit_depth::Int)
-
     
     int_levels = Dict(
         ICCv2_CALC => int_level__ICCv2,
@@ -82,7 +82,7 @@ function stat(int_level__ICCv2::Int, int_level__ICCv4::Int, bit_depth::Int)
     linear_values = Dict{LinearValueCalculator, Float64}()
     Lstar_values = Dict{LinearValueCalculator, Float64}()
     
-    for calc in [ICCv2_CALC, ICCv2_precise_CALC, ICCv4_CALC]
+    for calc in ALL_CALCS
 
         normalized_levels[calc] = int_levels[calc] / (2^bit_depth - 1)
         
@@ -91,17 +91,17 @@ function stat(int_level__ICCv2::Int, int_level__ICCv4::Int, bit_depth::Int)
         Lstar_values[calc] = calculate_Lstar_value_for_monochrome(linear_values[calc])
     end    
 
-    for calc in [ICCv2_CALC, ICCv2_precise_CALC, ICCv4_CALC]
+    for calc in ALL_CALCS
 
         @printf "level %5d /%2d normalized level in range [0..1]: %0.5f (%s)\n" int_levels[calc] bit_depth normalized_levels[calc] nameof(typeof(calc))
     end
 
-    for calc in [ICCv2_CALC, ICCv2_precise_CALC, ICCv4_CALC]
+    for calc in ALL_CALCS
 
         @printf "level %5d /%2d linear value in range [0..1]: %0.5f (%s)\n" int_levels[calc] bit_depth linear_values[calc] nameof(typeof(calc))
     end
 
-    for calc in [ICCv2_CALC, ICCv2_precise_CALC, ICCv4_CALC]
+    for calc in ALL_CALCS
 
         @printf "level %5d /%2d L* value in range [0..100]: %0.2f (%s)\n" int_levels[calc] bit_depth Lstar_values[calc] nameof(typeof(calc))
     end
@@ -110,6 +110,8 @@ function stat(int_level__ICCv2::Int, int_level__ICCv4::Int, bit_depth::Int)
 end
 
 
+stat(0, 0, 8)  # BLACK - 8-bit
+stat(0, 0, 16)  # BLACK - 16-bit
 stat(1, 1, 8)  # very dark color (ICC v2) - 8-bit
 stat(1, 1, 16)  # very dark color (ICC v2) - 16-bit
 stat(2^8 - 2, 2^8 - 2, 8)  # brightness color (ICC v2) - 8-bit
