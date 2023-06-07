@@ -6,31 +6,35 @@
 
 using Printf
 
-function calculate_linear_value_ICCv2(normalized_level::Float64)
+abstract type LinearValueCalculator end
+
+struct ICCv2 <: LinearValueCalculator end
+struct ICCv2_precise <: LinearValueCalculator end
+struct ICCv4 <: LinearValueCalculator end
+
+
+function calculate_linear_value(normalized_level::Float64, calculator::ICCv2)
     if normalized_level <= 0.04045
-        linear_value = normalized_level / 12.92
+        return normalized_level / 12.92
     else
-        linear_value = ((normalized_level + 0.055) / 1.055) ^ 2.4
+        return ((normalized_level + 0.055) / 1.055) ^ 2.4
     end
-    return linear_value
 end
 
-function calculate_linear_value_ICCv2_precise(normalized_level::Float64)
+function calculate_linear_value(normalized_level::Float64, calculator::ICCv2_precise)
     if normalized_level <= 0.0392857
-        linear_value = normalized_level / 12.9232102
+        return normalized_level / 12.9232102
     else
-        linear_value = ((normalized_level + 0.055) / 1.055) ^ 2.4
+        return ((normalized_level + 0.055) / 1.055) ^ 2.4
     end
-    return linear_value
 end
 
-function calculate_linear_value_ICCv4(normalized_level::Float64)
+function calculate_linear_value(normalized_level::Float64, calculator::ICCv4)
     if normalized_level <= 0.04045
-        linear_value = 0.0772059 * normalized_level + 0.0025
+        return 0.0772059 * normalized_level + 0.0025
     else
-        linear_value = (0.946879 * normalized_level + 0.0520784) ^ 2.4 + 0.0025
+        return (0.946879 * normalized_level + 0.0520784) ^ 2.4 + 0.0025
     end
-    return linear_value
 end
 
 # Convert linearRGB to XYZ
@@ -42,12 +46,9 @@ const R709_TO_XYZ_D65 = [
 
 ### ONLY for calculating monochrome!!!
 function calculate_Lstar_value_for_monochrome(linear_value::Float64)
-    # Define the matrix and vector
-    matrix = R709_TO_XYZ_D65
-    vector = [linear_value, linear_value, linear_value]
     
-    # Multiply R709_TO_XYZ_D65 matrix by vector with linear_value
-    XYZ_D65 = matrix * vector
+    # Multiply R709_TO_XYZ_D65 matrix by vector with the same linear_value for R, G and B (monochrome)
+    XYZ_D65 = R709_TO_XYZ_D65 * [linear_value, linear_value, linear_value]
     
     # Calculate L* value for D65
     Yn = 1.0  # Reference white point
@@ -63,28 +64,47 @@ function calculate_Lstar_value_for_monochrome(linear_value::Float64)
     return L_star
 end
 
+
+const ICCv2_CALC = ICCv2()
+const ICCv2_precise_CALC = ICCv2_precise()
+const ICCv4_CALC = ICCv4()
+
 function stat(int_level__ICCv2::Int, int_level__ICCv4::Int, bit_depth::Int)
+
     
-    normalized_level__ICCv2 = int_level__ICCv2 / (2^bit_depth - 1)
-    @printf "level %5d /%2d normalized level in range [0..1]: %0.5f (ICC v2)\n" int_level__ICCv2 bit_depth normalized_level__ICCv2
+    int_levels = Dict(
+        ICCv2_CALC => int_level__ICCv2,
+        ICCv2_precise_CALC => int_level__ICCv2,
+        ICCv4_CALC => int_level__ICCv4
+    )
+
+    normalized_levels = Dict{LinearValueCalculator, Float64}()
+    linear_values = Dict{LinearValueCalculator, Float64}()
+    Lstar_values = Dict{LinearValueCalculator, Float64}()
     
-    normalized_level__ICCv4 = int_level__ICCv4 / (2^bit_depth - 1)
-    @printf "level %5d /%2d normalized level in range [0..1]: %0.5f (ICC v4)\n" int_level__ICCv4 bit_depth normalized_level__ICCv4
-    
-    linear_value__ICCv2 = calculate_linear_value_ICCv2(normalized_level__ICCv2)
-    @printf "level %5d /%2d linear value in range [0..1]: %0.5f (ICC v2)\n" int_level__ICCv2 bit_depth linear_value__ICCv2
-    
-    linear_value__ICCv2_precise = calculate_linear_value_ICCv2_precise(normalized_level__ICCv2)
-    @printf "level %5d /%2d linear value in range [0..1]: %0.5f (ICC v2 precise)\n" int_level__ICCv2 bit_depth linear_value__ICCv2_precise
-    
-    linear_value__ICCv4 = calculate_linear_value_ICCv4(normalized_level__ICCv4)
-    @printf "level %5d /%2d linear value in range [0..1]: %0.5f (ICC v4)\n" int_level__ICCv4 bit_depth linear_value__ICCv4
-    
-    Lstar_value__ICCv2 = calculate_Lstar_value_for_monochrome(linear_value__ICCv2)
-    @printf "level %5d /%2d L* value in range [0..100]: %0.2f (ICC v2)\n" int_level__ICCv2 bit_depth Lstar_value__ICCv2
-    
-    Lstar_value__ICCv4 = calculate_Lstar_value_for_monochrome(linear_value__ICCv4)
-    @printf "level %5d /%2d L* value in range [0..100]: %0.2f (ICC v4)\n" int_level__ICCv4 bit_depth Lstar_value__ICCv4
+    for calc in [ICCv2_CALC, ICCv2_precise_CALC, ICCv4_CALC]
+
+        normalized_levels[calc] = int_levels[calc] / (2^bit_depth - 1)
+        
+        linear_values[calc] = calculate_linear_value(normalized_levels[calc], calc)
+
+        Lstar_values[calc] = calculate_Lstar_value_for_monochrome(linear_values[calc])
+    end    
+
+    for calc in [ICCv2_CALC, ICCv2_precise_CALC, ICCv4_CALC]
+
+        @printf "level %5d /%2d normalized level in range [0..1]: %0.5f (%s)\n" int_levels[calc] bit_depth normalized_levels[calc] nameof(typeof(calc))
+    end
+
+    for calc in [ICCv2_CALC, ICCv2_precise_CALC, ICCv4_CALC]
+
+        @printf "level %5d /%2d linear value in range [0..1]: %0.5f (%s)\n" int_levels[calc] bit_depth linear_values[calc] nameof(typeof(calc))
+    end
+
+    for calc in [ICCv2_CALC, ICCv2_precise_CALC, ICCv4_CALC]
+
+        @printf "level %5d /%2d L* value in range [0..100]: %0.2f (%s)\n" int_levels[calc] bit_depth Lstar_values[calc] nameof(typeof(calc))
+    end
     
     println()
 end
