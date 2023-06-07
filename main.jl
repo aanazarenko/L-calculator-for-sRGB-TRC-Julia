@@ -6,34 +6,34 @@
 
 using Printf
 
-abstract type LinearValueCalculator end
+abstract type ClinearCalculator end
 
-struct ICCv2 <: LinearValueCalculator end
-struct ICCv2_precise <: LinearValueCalculator end
-struct ICCv4 <: LinearValueCalculator end
+struct ICCv2 <: ClinearCalculator end
+struct ICCv2_precise <: ClinearCalculator end
+struct ICCv4 <: ClinearCalculator end
 
 
-function calculate_linear_value(normalized_level::Float64, calculator::ICCv2)
-    if normalized_level <= 0.04045
-        return normalized_level / 12.92
+function calc_Clinear(CsRGB::Float64, calculator::ICCv2)
+    if CsRGB <= 0.04045
+        return CsRGB / 12.92
     else
-        return ((normalized_level + 0.055) / 1.055) ^ 2.4
+        return ((CsRGB + 0.055) / 1.055) ^ 2.4
     end
 end
 
-function calculate_linear_value(normalized_level::Float64, calculator::ICCv2_precise)
-    if normalized_level <= 0.0392857
-        return normalized_level / 12.9232102
+function calc_Clinear(CsRGB::Float64, calculator::ICCv2_precise)
+    if CsRGB <= 0.0392857
+        return CsRGB / 12.9232102
     else
-        return ((normalized_level + 0.055) / 1.055) ^ 2.4
+        return ((CsRGB + 0.055) / 1.055) ^ 2.4
     end
 end
 
-function calculate_linear_value(normalized_level::Float64, calculator::ICCv4)
-    if normalized_level <= 0.04045
-        return 0.0772059 * normalized_level + 0.0025
+function calc_Clinear(CsRGB::Float64, calculator::ICCv4)
+    if CsRGB <= 0.04045
+        return 0.0772059 * CsRGB + 0.0025
     else
-        return (0.946879 * normalized_level + 0.0520784) ^ 2.4 + 0.0025
+        return (0.946879 * CsRGB + 0.0520784) ^ 2.4 + 0.0025
     end
 end
 
@@ -45,12 +45,12 @@ const R709_TO_XYZ_D65 = [
 ]
 
 ### ONLY for calculating monochrome!!!
-function calculate_Lstar_value_for_monochrome(linear_value::Float64)
+function calc_L✩_for_monochrome(Clinear::Float64)
     
-    # Multiply R709_TO_XYZ_D65 matrix by vector with the same linear_value for R, G and B (monochrome)
-    XYZ_D65 = R709_TO_XYZ_D65 * fill(linear_value, 3)
+    # Multiply R709_TO_XYZ_D65 matrix by vector with the same Clinear for R, G and B (monochrome)
+    XYZ_D65 = R709_TO_XYZ_D65 * fill(Clinear, 3)
     
-    # Calculate L* value for D65
+    # Calculate L* for D65
     Yn = 1.0  # Reference white point
     Y = XYZ_D65[2]  # Y coordinate
     Y÷Yn = Y / Yn
@@ -70,40 +70,40 @@ const ALL_CALCS = [ICCv2_CALC, ICCv2_precise_CALC, ICCv4_CALC]
 
 @enum BitDepth::UInt8 _8=8 _9=9 _10=10 _11=11 _12=12 _13=13 _14=14 _15=15 _16=16
 
-function stat(int_level__ICCv2::Union{UInt8, UInt16}, int_level__ICCv4::Union{UInt8, UInt16}, bit_depth::BitDepth)
+function stat(CsRGB_number__ICCv2::Union{UInt8, UInt16}, CsRGB_number__ICCv4::Union{UInt8, UInt16}, bit_depth::BitDepth)
     
-    int_levels = Dict(
-        ICCv2_CALC => int_level__ICCv2,
-        ICCv2_precise_CALC => int_level__ICCv2,
-        ICCv4_CALC => int_level__ICCv4
+    CsRGB_numbers = Dict(
+        ICCv2_CALC => CsRGB_number__ICCv2,
+        ICCv2_precise_CALC => CsRGB_number__ICCv2,
+        ICCv4_CALC => CsRGB_number__ICCv4
     )
 
-    normalized_levels = Dict{LinearValueCalculator, Float64}()
-    linear_values = Dict{LinearValueCalculator, Float64}()
-    Lstar_values = Dict{LinearValueCalculator, Float64}()
+    CsRGBs = Dict{ClinearCalculator, Float64}()
+    Clinears = Dict{ClinearCalculator, Float64}()
+    L✩s = Dict{ClinearCalculator, Float64}()
     
     for calc in ALL_CALCS
 
-        normalized_levels[calc] = int_levels[calc] / (2^UInt8(bit_depth) - 1)
+        CsRGBs[calc] = CsRGB_numbers[calc] / (2^UInt8(bit_depth) - 1)
         
-        linear_values[calc] = calculate_linear_value(normalized_levels[calc], calc)
+        Clinears[calc] = calc_Clinear(CsRGBs[calc], calc)
 
-        Lstar_values[calc] = calculate_Lstar_value_for_monochrome(linear_values[calc])
+        L✩s[calc] = calc_L✩_for_monochrome(Clinears[calc])
     end    
 
     for calc in ALL_CALCS
 
-        @printf "level %5d /%2d normalized level in range [0..1]: %0.5f (%s)\n" int_levels[calc] UInt8(bit_depth) normalized_levels[calc] nameof(typeof(calc))
+        @printf "CsRGB number %5d /%2d CsRGB in range [0.0..1.0]: %0.5f (%s)\n" CsRGB_numbers[calc] UInt8(bit_depth) CsRGBs[calc] nameof(typeof(calc))
     end
 
     for calc in ALL_CALCS
 
-        @printf "level %5d /%2d linear value in range [0..1]: %0.5f (%s)\n" int_levels[calc] UInt8(bit_depth) linear_values[calc] nameof(typeof(calc))
+        @printf "CsRGB number %5d /%2d Clinear in range [0.0..1.0]: %0.5f (%s)\n" CsRGB_numbers[calc] UInt8(bit_depth) Clinears[calc] nameof(typeof(calc))
     end
 
     for calc in ALL_CALCS
 
-        @printf "level %5d /%2d L* value in range [0..100]: %0.2f (%s)\n" int_levels[calc] UInt8(bit_depth) Lstar_values[calc] nameof(typeof(calc))
+        @printf "CsRGB number %5d /%2d L* in range [0..100]: %0.2f (%s)\n" CsRGB_numbers[calc] UInt8(bit_depth) L✩s[calc] nameof(typeof(calc))
     end
     
     println()
