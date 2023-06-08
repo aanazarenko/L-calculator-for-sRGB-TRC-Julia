@@ -1,4 +1,4 @@
-entrypoint = "main.jl"
+entrypoint = "bin/main.jl"
 
 [interpreter]
 command = ["julia", "-i", "--banner=no"]
