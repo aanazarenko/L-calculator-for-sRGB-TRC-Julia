@@ -90,7 +90,7 @@ macro toCsrgbnumICCv2⨉CsrgbnumICCv4⨉bits(bit_depth, CsrgbnumICCv2, CsrgbnumI
     
     @assert isinteger(bit_depth) && isinteger(CsrgbnumICCv2) && isinteger(CsrgbnumICCv4) "All arguments must be integers"
 
-    @assert bit_depth in 8:16  "bit_depth must be in range [8..16]"
+    @assert bit_depth in 8:16  "bit_depth must be in range $(bit_depth)"
 
     bit_depth     = UInt8(bit_depth)
     CsrgbnumICCv2 = UInt(CsrgbnumICCv2)
