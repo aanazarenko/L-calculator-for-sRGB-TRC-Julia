@@ -88,28 +88,23 @@ end
 # P.S. There are three known useful bit depth for sRGB input numbers: 8, 10, 15 (Photoshop), 16
 macro toCsrgbnumICCv2⨉CsrgbnumICCv4⨉bits(bit_depth, CsrgbnumICCv2, CsrgbnumICCv4)
     
-    if !(isinteger(bit_depth) && isinteger(CsrgbnumICCv2) && isinteger(CsrgbnumICCv4))
-        error("All arguments must be integers")
-    end
+    @assert isinteger(bit_depth) && isinteger(CsrgbnumICCv2) && isinteger(CsrgbnumICCv4) "All arguments must be integers"
 
-    bit_depth = convert(UInt8, bit_depth)
-    CsrgbnumICCv2 = convert(UInt, CsrgbnumICCv2)
-    CsrgbnumICCv4 = convert(UInt, CsrgbnumICCv4)
+    @assert bit_depth >= 8 && bit_depth <= 16  "bit_depth must be in range [8..16]"
 
-    if CsrgbnumICCv2 >= 2^bit_depth || CsrgbnumICCv4 >= 2^bit_depth
-        error("CsrgbnumICCv2 or CsrgbnumICCv4 is out of range for the specified bit depth")
-    end
+    @assert CsrgbnumICCv2 >= 0 && CsrgbnumICCv4 >= 0  "CsrgbnumICCv2 and CsrgbnumICCv4 must be >=0"
+    
+    bit_depth     = UInt8(bit_depth)
+    CsrgbnumICCv2 = UInt(CsrgbnumICCv2)
+    CsrgbnumICCv4 = UInt(CsrgbnumICCv4)
+
+    @assert CsrgbnumICCv2 < 2^bit_depth && CsrgbnumICCv4 < 2^bit_depth "CsrgbnumICCv2 or CsrgbnumICCv4 is out of range for the specified bit depth"
 
     if bit_depth == 8
-        forICCv2 = UInt8(CsrgbnumICCv2)
-        forICCv4 = UInt8(CsrgbnumICCv4)
-        return CsrgbnumICCv2⨉CsrgbnumICCv4⨉bits{UInt8}(forICCv2, forICCv4, bit_depth)
+        return CsrgbnumICCv2⨉CsrgbnumICCv4⨉bits{UInt8}(UInt8(CsrgbnumICCv2), UInt8(CsrgbnumICCv4), bit_depth)
     else
-        forICCv2 = UInt16(CsrgbnumICCv2)
-        forICCv4 = UInt16(CsrgbnumICCv4)
-        return CsrgbnumICCv2⨉CsrgbnumICCv4⨉bits{UInt16}(forICCv2, forICCv4, bit_depth)
+        return CsrgbnumICCv2⨉CsrgbnumICCv4⨉bits{UInt16}(UInt16(CsrgbnumICCv2), UInt16(CsrgbnumICCv4), bit_depth)
     end
-
 end
 
 
@@ -155,14 +150,20 @@ function stat(triple::CsrgbnumICCv2⨉CsrgbnumICCv4⨉bits)
 end
 
 
-stat( @toCsrgbnumICCv2⨉CsrgbnumICCv4⨉bits  8     0     0 )  # BLACK - 8-bit
-stat( @toCsrgbnumICCv2⨉CsrgbnumICCv4⨉bits 16     0     0 )  # BLACK - 16-bit
-stat( @toCsrgbnumICCv2⨉CsrgbnumICCv4⨉bits  8     1     1 )  # very dark color - 8-bit
-stat( @toCsrgbnumICCv2⨉CsrgbnumICCv4⨉bits  8    10    10 )  # very dark color - 8-bit
-stat( @toCsrgbnumICCv2⨉CsrgbnumICCv4⨉bits 16     1     1 )  # very dark color - 16-bit
-stat( @toCsrgbnumICCv2⨉CsrgbnumICCv4⨉bits  8   254   254 )  # brightness color - 8-bit
-stat( @toCsrgbnumICCv2⨉CsrgbnumICCv4⨉bits 16 65534 65534 ) # brightness color - 16-bit
-stat( @toCsrgbnumICCv2⨉CsrgbnumICCv4⨉bits  8   124   123 )  # 20% Image surround reflectance - 8-bit
-stat( @toCsrgbnumICCv2⨉CsrgbnumICCv4⨉bits  8   118   117 )  # 18% gray card - 8-bit
-stat( @toCsrgbnumICCv2⨉CsrgbnumICCv4⨉bits 15 15117 15037 )  # 18% gray card - 15-bit
-stat( @toCsrgbnumICCv2⨉CsrgbnumICCv4⨉bits 16 30235 30074 )  # 18% gray card - 16-bit
+function stat()
+
+    stat( @toCsrgbnumICCv2⨉CsrgbnumICCv4⨉bits  8     0     0 )  # BLACK - 8-bit
+    stat( @toCsrgbnumICCv2⨉CsrgbnumICCv4⨉bits 16     0     0 )  # BLACK - 16-bit
+    stat( @toCsrgbnumICCv2⨉CsrgbnumICCv4⨉bits  8     1     1 )  # very dark color - 8-bit
+    stat( @toCsrgbnumICCv2⨉CsrgbnumICCv4⨉bits  8    10    10 )  # very dark color - 8-bit
+    stat( @toCsrgbnumICCv2⨉CsrgbnumICCv4⨉bits 16     1     1 )  # very dark color - 16-bit
+    stat( @toCsrgbnumICCv2⨉CsrgbnumICCv4⨉bits  8   254   254 )  # brightness color - 8-bit
+    stat( @toCsrgbnumICCv2⨉CsrgbnumICCv4⨉bits  8   254   254 )  # brightness color - 8-bit
+    stat( @toCsrgbnumICCv2⨉CsrgbnumICCv4⨉bits 16 65534 65534 ) # brightness color - 16-bit
+    stat( @toCsrgbnumICCv2⨉CsrgbnumICCv4⨉bits  8   124   123 )  # 20% Image surround reflectance - 8-bit
+    stat( @toCsrgbnumICCv2⨉CsrgbnumICCv4⨉bits  8   118   117 )  # 18% gray card - 8-bit
+    stat( @toCsrgbnumICCv2⨉CsrgbnumICCv4⨉bits 15 15117 15037 )  # 18% gray card - 15-bit
+    stat( @toCsrgbnumICCv2⨉CsrgbnumICCv4⨉bits 16 30235 30074 )  # 18% gray card - 16-bit
+end
+
+@time stat()
