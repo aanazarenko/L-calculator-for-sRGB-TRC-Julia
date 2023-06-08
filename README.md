@@ -4,7 +4,7 @@ Three algorithms are used here to calculate linear RGB components:
 - ICCv2 with better precision
 - ICCv4
  
-## Results of calculations:
+## Results of calculations [3998e762ad0b5b2712fb535a6739fe368be7b246]:
 ```
 Csrgb number     0 / 8 Csrgb inrange [0.0..1.0]: 0.00000 (ICCv2)
 Csrgb number     0 / 8 Csrgb inrange [0.0..1.0]: 0.00000 (ICCv2_precise)
