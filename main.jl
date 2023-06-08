@@ -158,7 +158,6 @@ function stat()
     stat( @toCsrgbnumICCv2⨉CsrgbnumICCv4⨉bits  8    10    10 )  # very dark color - 8-bit
     stat( @toCsrgbnumICCv2⨉CsrgbnumICCv4⨉bits 16     1     1 )  # very dark color - 16-bit
     stat( @toCsrgbnumICCv2⨉CsrgbnumICCv4⨉bits  8   254   254 )  # brightness color - 8-bit
-    stat( @toCsrgbnumICCv2⨉CsrgbnumICCv4⨉bits  8   254   254 )  # brightness color - 8-bit
     stat( @toCsrgbnumICCv2⨉CsrgbnumICCv4⨉bits 16 65534 65534 ) # brightness color - 16-bit
     stat( @toCsrgbnumICCv2⨉CsrgbnumICCv4⨉bits  8   124   123 )  # 20% Image surround reflectance - 8-bit
     stat( @toCsrgbnumICCv2⨉CsrgbnumICCv4⨉bits  8   118   117 )  # 18% gray card - 8-bit
@@ -166,4 +165,4 @@ function stat()
     stat( @toCsrgbnumICCv2⨉CsrgbnumICCv4⨉bits 16 30235 30074 )  # 18% gray card - 16-bit
 end
 
-@time stat()
+stat()
