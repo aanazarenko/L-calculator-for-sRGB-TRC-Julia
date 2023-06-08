@@ -117,17 +117,17 @@ function stat(triple::CsrgbnumICCv2⨉CsrgbnumICCv4⨉bits)
 
     for calc in ALL_CALCS
 
-        @printf "Csrgb nuber %5d /%2d Csrgb inrange [0.0..1.0]: %0.5f (%s)\n" Csrgb_nubers[calc] triple.bit_depth Csrgbs[calc] nameof(typeof(calc))
+        @printf "Csrgb number %5d /%2d Csrgb inrange [0.0..1.0]: %0.5f (%s)\n" Csrgb_nubers[calc] triple.bit_depth Csrgbs[calc] nameof(typeof(calc))
     end
 
     for calc in ALL_CALCS
 
-        @printf "Csrgb nuber %5d /%2d Clinear in range [0.0..1.0]: %0.5f (%s)\n" Csrgb_nubers[calc] triple.bit_depth Clinears[calc] nameof(typeof(calc))
+        @printf "Csrgb number %5d /%2d Clinear in range [0.0..1.0]: %0.5f (%s)\n" Csrgb_nubers[calc] triple.bit_depth Clinears[calc] nameof(typeof(calc))
     end
 
     for calc in ALL_CALCS
 
-        @printf "Csrgb nuber %5d /%2d L* in range [0..100]: %0.2f (%s)\n" Csrgb_nubers[calc] triple.bit_depth L✩s[calc] nameof(typeof(calc))
+        @printf "Csrgb number %5d /%2d L* in range [0..100]: %0.2f (%s)\n" Csrgb_nubers[calc] triple.bit_depth L✩s[calc] nameof(typeof(calc))
     end
     
     println()
