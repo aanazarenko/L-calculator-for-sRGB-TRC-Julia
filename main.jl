@@ -34,11 +34,33 @@ function calc_Clinear(Csrgb::Float64, ::ICCv2_precise)
     end
 end
 
+### ICCv4 specification allows to use parametric curves for TRC, so Type 4 curve from the spec
+##   should be supported. This type of curve uses four parameters: 
+##   - g - gamma
+##   - d - slope, where a linear part (near black) ends, and an exponential part starts
+##   - c - coefficient for a linear part near black
+##   - a and b - coefficients for an exponential part
+## The parameters should be supplied by v4 matrix ICC profile.
+## I've extracted them from `sRGB-elle-V4-srgbtrc.icc` profile using IccXMLTools by executing:
+## > IccToXml.exe sRGB-elle-V4-srgbtrc.icc sRGB-elle-V4-srgbtrc.xml
+## The main part from `sRGB-elle-V4-srgbtrc.xml` file is that one:
+##
+##      <ParametricCurve FunctionType="3">
+##        2.39999390 0.94786072 0.05213928 0.07739258 0.04045105
+##      </ParametricCurve>
+## `FunctionType` attribute value="3" means Type 4 curve, because `FunctionType` values start from 0
 function calc_Clinear(Csrgb::Float64, ::ICCv4)
-    if Csrgb <=0.04045
-        0.0772059 * Csrgb + .0025
+
+    g = 2.39999390
+    a = 0.94786072
+    b = 0.05213928
+    c = 0.07739258
+    d = 0.04045105
+
+    if Csrgb < d
+        c * Csrgb
     else
-        (0.946879 * Csrgb + .0520784) ^ 2.4 + 0.0025
+        (a * Csrgb + b)^g 
     end
 end
 
@@ -162,16 +184,28 @@ function stat()
         triple -> println(stat(toCsrgbnumICCv2⨉CsrgbnumICCv4⨉bits(triple...))), 
         [ 
             (  8,     0,     0 ),  # BLACK - 8-bit
-            ( 16,     0,     0 ),  # BLACK - 16-bit
             (  8,     1,     1 ),  # very dark color - 8-bit
+            (  8,     2,     2 ),  # very dark color - 8-bit
+            (  8,     3,     3 ),  # very dark color - 8-bit
+            (  8,     4,     4 ),  # very dark color - 8-bit
+            (  8,     5,     5 ),  # very dark color - 8-bit
+            (  8,     6,     6 ),  # very dark color - 8-bit
+            (  8,     7,     7 ),  # very dark color - 8-bit
+            (  8,     8,     8 ),  # very dark color - 8-bit
+            (  8,     9,     9 ),  # very dark color - 8-bit
             (  8,    10,    10 ),  # very dark color - 8-bit
-            ( 16,     1,     1 ),  # very dark color - 16-bit
+            (  8,    11,    11 ),  # very dark color - 8-bit
+            (  8,    12,    12 ),  # very dark color - 8-bit
+            (  8,    13,    13 ),  # very dark color - 8-bit
+            (  8,   118,   118 ),  # 18% gray card - 8-bit
+            (  8,   124,   124 ),  # 20% Image surround reflectance - 8-bit
             (  8,   254,   254 ),  # brightness color - 8-bit
+            (  8,   255,   255 ),  # WHITE color - 8-bit
+            ( 16,     0,     0 ),  # BLACK - 16-bit
+            ( 16,     1,     1 ),  # very dark color - 16-bit
             ( 16, 65534, 65534 ),  # brightness color - 16-bit
-            (  8,   124,   123 ),  # 20% Image surround reflectance - 8-bit
-            (  8,   118,   117 ),  # 18% gray card - 8-bit
-            ( 15, 15117, 15037 ),  # 18% gray card - 15-bit
-            ( 16, 30235, 30074 )  # 18% gray card - 16-bit
+            ( 15, 15117, 15117 ),  # 18% gray card - 15-bit
+            ( 16, 30235, 30235 )   # 18% gray card - 16-bit
         ]
     )
 end
