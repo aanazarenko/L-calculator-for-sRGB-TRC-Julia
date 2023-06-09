@@ -5,6 +5,8 @@
 #######
 
 using Printf
+import Pkg; Pkg.add("StringBuilders")
+using StringBuilders
 
 # 'Clinear' stands from:
 # - 'C' - color component
@@ -18,25 +20,25 @@ struct ICCv4 <: ClinearCalculator end
 
 function calc_Clinear(Csrgb::Float64, ::ICCv2)
     if Csrgb <=0.04045
-        return Csrgb / 2.92
+        Csrgb / 2.92
     else
-        return ((Csrgb + .055) / 1.055) ^ 2.4
+        ((Csrgb + .055) / 1.055) ^ 2.4
     end
 end
 
 function calc_Clinear(Csrgb::Float64, ::ICCv2_precise)
     if Csrgb <=0.0392857
-        return Csrgb / 2.9232102
+        Csrgb / 2.9232102
     else
-        return ((Csrgb + .055) / 1.055) ^ 2.4
+        ((Csrgb + .055) / 1.055) ^ 2.4
     end
 end
 
 function calc_Clinear(Csrgb::Float64, ::ICCv4)
     if Csrgb <=0.04045
-        return 0.0772059 * Csrgb + .0025
+        0.0772059 * Csrgb + .0025
     else
-        return (0.946879 * Csrgb + .0520784) ^ 2.4 + 0.0025
+        (0.946879 * Csrgb + .0520784) ^ 2.4 + 0.0025
     end
 end
 
@@ -59,9 +61,9 @@ function calc_L✩_for_monochrome(Clinear::Float64)
     Y_div_Yn = Y / Yn
 
     if Y_div_Yn > 0.008856
-        return 116 * Y_div_Yn ^ (1/3) - 16
+        116 * Y_div_Yn ^ (1/3) - 16
     else
-        return 903.3 * Y_div_Yn
+        903.3 * Y_div_Yn
     end
 end
 
@@ -86,7 +88,7 @@ end
 # - UInt8 for 8 bits input sRGB color
 # - UInt16 for >8 bits input sRGB color
 # P.S. There are three known useful bit depth for sRGB input numbers: 8, 10, 15 (Photoshop), 16
-macro toCsrgbnumICCv2⨉CsrgbnumICCv4⨉bits(bit_depth, CsrgbnumICCv2, CsrgbnumICCv4)
+function toCsrgbnumICCv2⨉CsrgbnumICCv4⨉bits(bit_depth, CsrgbnumICCv2, CsrgbnumICCv4)
     
     @assert isinteger(bit_depth) && isinteger(CsrgbnumICCv2) && isinteger(CsrgbnumICCv4) "All arguments must be integers"
 
@@ -111,6 +113,8 @@ end
 
 
 function stat(triple::CsrgbnumICCv2⨉CsrgbnumICCv4⨉bits)
+
+    result = StringBuilder()
     
     Csrgb_nubers = Dict(
         ICCv2_CALC         => triple.forICCv2,
@@ -135,36 +139,42 @@ function stat(triple::CsrgbnumICCv2⨉CsrgbnumICCv4⨉bits)
 
     for calc in ALL_CALCS
 
-        @printf "Csrgb number %5d /%2d Csrgb inrange [0.0..1.0]: %0.5f (%s)\n" Csrgb_nubers[calc] triple.bit_depth Csrgbs[calc] nameof(typeof(calc))
+        append!(result, @sprintf "Csrgb number %5d /%2d Csrgb in range [0.0..1.0]: %0.5f (%s)\n" Csrgb_nubers[calc] triple.bit_depth Csrgbs[calc] nameof(typeof(calc)))
     end
 
     for calc in ALL_CALCS
 
-        @printf "Csrgb number %5d /%2d Clinear in range [0.0..1.0]: %0.5f (%s)\n" Csrgb_nubers[calc] triple.bit_depth Clinears[calc] nameof(typeof(calc))
+        append!(result, @sprintf "Csrgb number %5d /%2d Clinear in range [0.0..1.0]: %0.5f (%s)\n" Csrgb_nubers[calc] triple.bit_depth Clinears[calc] nameof(typeof(calc)))
     end
 
     for calc in ALL_CALCS
 
-        @printf "Csrgb number %5d /%2d L* in range [0..100]: %0.2f (%s)\n" Csrgb_nubers[calc] triple.bit_depth L✩s[calc] nameof(typeof(calc))
+        append!(result, @sprintf "Csrgb number %5d /%2d L* in range [0..100]: %0.2f (%s)\n" Csrgb_nubers[calc] triple.bit_depth L✩s[calc] nameof(typeof(calc)))
     end
     
-    println()
+    String(result)
 end
 
 
 function stat()
 
-    stat( @toCsrgbnumICCv2⨉CsrgbnumICCv4⨉bits  8     0     0 )  # BLACK - 8-bit
-    stat( @toCsrgbnumICCv2⨉CsrgbnumICCv4⨉bits 16     0     0 )  # BLACK - 16-bit
-    stat( @toCsrgbnumICCv2⨉CsrgbnumICCv4⨉bits  8     1     1 )  # very dark color - 8-bit
-    stat( @toCsrgbnumICCv2⨉CsrgbnumICCv4⨉bits  8    10    10 )  # very dark color - 8-bit
-    stat( @toCsrgbnumICCv2⨉CsrgbnumICCv4⨉bits 16     1     1 )  # very dark color - 16-bit
-    stat( @toCsrgbnumICCv2⨉CsrgbnumICCv4⨉bits  8   254   254 )  # brightness color - 8-bit
-    stat( @toCsrgbnumICCv2⨉CsrgbnumICCv4⨉bits 16 65534 65534 ) # brightness color - 16-bit
-    stat( @toCsrgbnumICCv2⨉CsrgbnumICCv4⨉bits  8   124   123 )  # 20% Image surround reflectance - 8-bit
-    stat( @toCsrgbnumICCv2⨉CsrgbnumICCv4⨉bits  8   118   117 )  # 18% gray card - 8-bit
-    stat( @toCsrgbnumICCv2⨉CsrgbnumICCv4⨉bits 15 15117 15037 )  # 18% gray card - 15-bit
-    stat( @toCsrgbnumICCv2⨉CsrgbnumICCv4⨉bits 16 30235 30074 )  # 18% gray card - 16-bit
+    
+    foreach(
+        triple -> println(stat(toCsrgbnumICCv2⨉CsrgbnumICCv4⨉bits(triple...))), 
+        [ 
+            (  8,     0,     0 ),  # BLACK - 8-bit
+            ( 16,     0,     0 ),  # BLACK - 16-bit
+            (  8,     1,     1 ),  # very dark color - 8-bit
+            (  8,    10,    10 ),  # very dark color - 8-bit
+            ( 16,     1,     1 ),  # very dark color - 16-bit
+            (  8,   254,   254 ),  # brightness color - 8-bit
+            ( 16, 65534, 65534 ),  # brightness color - 16-bit
+            (  8,   124,   123 ),  # 20% Image surround reflectance - 8-bit
+            (  8,   118,   117 ),  # 18% gray card - 8-bit
+            ( 15, 15117, 15037 ),  # 18% gray card - 15-bit
+            ( 16, 30235, 30074 )  # 18% gray card - 16-bit
+        ]
+    )
 end
 
 stat()
