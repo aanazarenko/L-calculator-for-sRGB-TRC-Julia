@@ -157,7 +157,6 @@ end
 
 
 function stat()
-
     
     foreach(
         triple -> println(stat(toCsrgbnumICCv2⨉CsrgbnumICCv4⨉bits(triple...))), 
