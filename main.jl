@@ -138,7 +138,7 @@ function stat(triple::CsrgbnumICCv2⨉CsrgbnumICCv4⨉bits)
 
     result = StringBuilder()
     
-    Csrgb_nubers = Dict(
+    Csrgb_numbers = Dict(
         ICCv2_CALC         => triple.forICCv2,
         ICCv2_precise_CALC => triple.forICCv2, #use the same ICCv2 number for ICCv2_precise calculator
         ICCv4_CALC         => triple.forICCv4
@@ -152,7 +152,7 @@ function stat(triple::CsrgbnumICCv2⨉CsrgbnumICCv4⨉bits)
     
     for calc in ALL_CALCS
 
-        Csrgbs[calc]   = Csrgb_nubers[calc] / (2^UInt8(triple.bit_depth) - 1)
+        Csrgbs[calc]   = Csrgb_numbers[calc] / (2^UInt8(triple.bit_depth) - 1)
         
         Clinears[calc] = calc_Clinear(Csrgbs[calc], calc)
 
@@ -161,17 +161,17 @@ function stat(triple::CsrgbnumICCv2⨉CsrgbnumICCv4⨉bits)
 
     for calc in ALL_CALCS
 
-        append!(result, @sprintf "Csrgb number %5d /%2d Csrgb in range [0.0..1.0]: %0.5f (%s)\n" Csrgb_nubers[calc] triple.bit_depth Csrgbs[calc] nameof(typeof(calc)))
+        append!(result, @sprintf "Csrgb number %5d /%2d Csrgb in range [0.0..1.0]: %0.5f (%s)\n" Csrgb_numbers[calc] triple.bit_depth Csrgbs[calc] nameof(typeof(calc)))
     end
 
     for calc in ALL_CALCS
 
-        append!(result, @sprintf "Csrgb number %5d /%2d Clinear in range [0.0..1.0]: %0.5f (%s)\n" Csrgb_nubers[calc] triple.bit_depth Clinears[calc] nameof(typeof(calc)))
+        append!(result, @sprintf "Csrgb number %5d /%2d Clinear in range [0.0..1.0]: %0.5f (%s)\n" Csrgb_numbers[calc] triple.bit_depth Clinears[calc] nameof(typeof(calc)))
     end
 
     for calc in ALL_CALCS
 
-        append!(result, @sprintf "Csrgb number %5d /%2d L* in range [0..100]: %0.2f (%s)\n" Csrgb_nubers[calc] triple.bit_depth L✩s[calc] nameof(typeof(calc)))
+        append!(result, @sprintf "Csrgb number %5d /%2d L* in range [0..100]: %0.2f (%s)\n" Csrgb_numbers[calc] triple.bit_depth L✩s[calc] nameof(typeof(calc)))
     end
     
     String(result)
