@@ -197,15 +197,16 @@ function stat()
             (  8,    11,    11 ),  # very dark color - 8-bit
             (  8,    12,    12 ),  # very dark color - 8-bit
             (  8,    13,    13 ),  # very dark color - 8-bit
-            (  8,   118,   118 ),  # 18% gray card - 8-bit
+            (  8,   118,   118 ),  # gamma 2.2 18% gray card - 8-bit
+            (  8,   119,   119 ),  # 18% gray card - 8-bit
             (  8,   124,   124 ),  # 20% Image surround reflectance - 8-bit
             (  8,   254,   254 ),  # brightness color - 8-bit
             (  8,   255,   255 ),  # WHITE color - 8-bit
             ( 16,     0,     0 ),  # BLACK - 16-bit
             ( 16,     1,     1 ),  # very dark color - 16-bit
             ( 16, 65534, 65534 ),  # brightness color - 16-bit
-            ( 15, 15117, 15117 ),  # 18% gray card - 15-bit
-            ( 16, 30235, 30235 )   # 18% gray card - 16-bit
+            ( 15, 15280, 15280 ),  # 18% gray card - 15-bit
+            ( 16, 30560, 30560 )   # 18% gray card - 16-bit
         ]
     )
 end
